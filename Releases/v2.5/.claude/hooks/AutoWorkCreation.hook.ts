@@ -24,6 +24,7 @@
 
 import { mkdirSync, existsSync, readFileSync, writeFileSync, symlinkSync, unlinkSync, lstatSync } from 'fs';
 import { join } from 'path';
+import { getPaiDir } from './lib/paths';
 import { getPSTComponents, getISOTimestamp } from './lib/time';
 import { inference } from '../skills/PAI/Tools/Inference';
 
@@ -48,7 +49,7 @@ interface PromptClassification {
   is_new_topic: boolean;
 }
 
-const BASE_DIR = process.env.PAI_DIR || join(process.env.HOME!, '.claude');
+const BASE_DIR = getPaiDir();
 const WORK_DIR = join(BASE_DIR, 'MEMORY', 'WORK');
 const STATE_DIR = join(BASE_DIR, 'MEMORY', 'STATE');
 const CURRENT_WORK_FILE = join(STATE_DIR, 'current-work.json');
@@ -218,14 +219,22 @@ _Important observations during execution..._
   };
   writeFileSync(join(taskPath, 'ISC.json'), JSON.stringify(isc, null, 2), 'utf-8');
 
-  // Update 'current' symlink
+  // Update 'current' symlink (skip on Windows if symlink creation fails)
   const currentLink = join(sessionPath, 'tasks', 'current');
   try {
     if (existsSync(currentLink) || lstatSync(currentLink)) {
       unlinkSync(currentLink);
     }
-  } catch { /* ignore if doesn't exist */ }
-  symlinkSync(taskDirName, currentLink);
+    symlinkSync(taskDirName, currentLink);
+  } catch (err) {
+    // On Windows, symlinks may fail without admin/dev mode
+    // Fall back to a simple text file reference
+    try {
+      writeFileSync(currentLink, taskDirName, 'utf-8');
+    } catch {
+      // Non-critical, continue without the reference
+    }
+  }
 
   console.error(`[AutoWork] Created task: ${taskPath}`);
   return taskDirName;

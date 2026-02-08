@@ -60,7 +60,7 @@ function resetTabTitle(paiDir: string): void {
       execSync(`kitty @ set-tab-title "${cleanTitle}"`, { stdio: 'ignore', timeout: 2000 });
       // Reset tab color to default (dark blue for active, no special color for inactive)
       execSync(
-        `kitten @ set-tab-color --self active_bg=#002B80 active_fg=#FFFFFF inactive_bg=none inactive_fg=#A0A0A0`,
+        `kitty @ set-tab-color --self active_bg=#002B80 active_fg=#FFFFFF inactive_bg=none inactive_fg=#A0A0A0`,
         { stdio: 'ignore', timeout: 2000 }
       );
       console.error('🔄 Tab title reset to clean state');
@@ -291,8 +291,9 @@ async function checkActiveProgress(paiDir: string): Promise<string | null> {
       }
     }
 
-    summary += '\n💡 To resume: `bun run ~/.claude/skills/PAI/Tools/SessionProgress.ts resume <project>`\n';
-    summary += '💡 To complete: `bun run ~/.claude/skills/PAI/Tools/SessionProgress.ts complete <project>`\n';
+    const progressTool = join(paiDir, 'skills/PAI/Tools/SessionProgress.ts');
+    summary += `\n💡 To resume: \`bun run ${progressTool} resume <project>\`\n`;
+    summary += `💡 To complete: \`bun run ${progressTool} complete <project>\`\n`;
 
     return summary;
   } catch (error) {
@@ -359,10 +360,12 @@ async function main() {
     if (needsRebuild) {
       console.error('🔨 Rebuilding SKILL.md (components changed)...');
       try {
-        execSync('bun ~/.claude/skills/PAI/Tools/CreateDynamicCore.ts', {
+        const createCorePath = join(paiDir, 'skills/PAI/Tools/CreateDynamicCore.ts');
+        execSync(`bun run "${createCorePath}"`, {
           cwd: paiDir,
           stdio: 'pipe',
-          timeout: 5000
+          timeout: 5000,
+          shell: true
         });
         console.error('✅ SKILL.md rebuilt from latest components');
       } catch (err) {

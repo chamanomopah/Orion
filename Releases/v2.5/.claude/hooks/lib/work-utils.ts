@@ -5,10 +5,11 @@
 
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
+import { getPaiDir } from './paths';
 
 export type AlgorithmPhase = 'OBSERVE' | 'THINK' | 'PLAN' | 'BUILD' | 'EXECUTE' | 'VERIFY' | 'LEARN';
 
-const CLAUDE_DIR = process.env.PAI_DIR || process.env.HOME + '/.claude';
+const CLAUDE_DIR = getPaiDir();
 const WORK_DIR = join(CLAUDE_DIR, 'MEMORY', 'WORK');
 
 /**

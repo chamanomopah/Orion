@@ -16,7 +16,7 @@
 
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import { homedir } from 'os';
+import { getPaiDir } from './paths';
 import { getIdentity } from './identity';
 
 // ============================================================================
@@ -108,7 +108,7 @@ function expandEnvVars(content: string): string {
  */
 export function getNotificationConfig(): NotificationConfig {
   try {
-    const paiDir = process.env.PAI_DIR || join(homedir(), '.claude');
+    const paiDir = getPaiDir();
     const settingsPath = join(paiDir, 'settings.json');
 
     if (existsSync(settingsPath)) {
@@ -139,7 +139,9 @@ export function getNotificationConfig(): NotificationConfig {
 // Session Timing
 // ============================================================================
 
-const SESSION_START_FILE = '/tmp/pai-session-start.txt';
+import { tmpdir } from 'os';
+
+const SESSION_START_FILE = join(tmpdir(), 'pai-session-start.txt');
 
 /**
  * Record session start time (call from SessionStart hook)
