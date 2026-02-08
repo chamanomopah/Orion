@@ -20,6 +20,7 @@
  *
  * SIDE EFFECTS:
  * - Kitty remote control: Sets tab color to teal (#085050)
+ * - Windows: Sets tab title only (colors not supported)
  *
  * INTER-HOOK RELATIONSHIPS:
  * - DEPENDS ON: None
@@ -35,11 +36,14 @@
  *
  * ERROR HANDLING:
  * - Kitty unavailable: Silent failure (other terminals not supported)
+ * - Windows: Graceful degradation (tab title works, colors skipped)
  *
  * PERFORMANCE:
  * - Non-blocking: Yes
  * - Typical execution: <50ms
  */
+
+import { platform } from './lib/platform';
 
 const TAB_AWAITING_BG = '#085050';  // Dark teal - waiting for user input
 const ACTIVE_TAB_BG = '#002B80';    // Dark blue - active tab always
@@ -52,15 +56,29 @@ const QUESTION_TITLE = '❓ Question';
 async function main() {
   try {
     // Set tab color: active stays dark blue, inactive shows teal
-    await Bun.$`kitten @ set-tab-color --self active_bg=${ACTIVE_TAB_BG} active_fg=${TAB_TEXT} inactive_bg=${TAB_AWAITING_BG} inactive_fg=${INACTIVE_TEXT}`;
+    // On Windows: colors are not supported, gracefully skipped
+    platform.setTabColor({
+      active_bg: ACTIVE_TAB_BG,
+      active_fg: TAB_TEXT,
+      inactive_bg: TAB_AWAITING_BG,
+      inactive_fg: INACTIVE_TEXT
+    });
 
-    // Set simple question title - teal background provides visual distinction
-    await Bun.$`kitty @ set-tab-title ${QUESTION_TITLE}`;
+    // Set simple question title - works on all platforms
+    platform.setTabTitle(QUESTION_TITLE);
 
-    console.error('[SetQuestionTab] Tab set to teal with question indicator');
+    if (platform.isWindows) {
+      console.error('[SetQuestionTab] Tab title set (colors not supported on Windows)');
+    } else {
+      console.error('[SetQuestionTab] Tab set to teal with question indicator');
+    }
   } catch (error) {
     // Silently fail if kitty remote control is not available
-    console.error('[SetQuestionTab] Kitty remote control unavailable');
+    if (platform.isWindows) {
+      console.error('[SetQuestionTab] Tab colors not supported on Windows terminals');
+    } else {
+      console.error('[SetQuestionTab] Kitty remote control unavailable');
+    }
   }
 
   process.exit(0);

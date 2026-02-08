@@ -47,9 +47,10 @@
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { spawnSync, execSync } from 'child_process';
+import { spawnSync } from 'child_process';
 
 import { getPaiDir, getSettingsPath } from './lib/paths';
+import { platform } from './lib/platform';
 
 const paiDir = getPaiDir();
 const settingsPath = getSettingsPath();
@@ -60,7 +61,7 @@ const settingsPath = getSettingsPath();
 
     // Check if this is a subagent session - if so, exit silently
     const claudeProjectDir = process.env.CLAUDE_PROJECT_DIR || '';
-    const isSubagent = claudeProjectDir.includes('/.claude/Agents/') ||
+    const isSubagent = platform.isAgentDirectory(claudeProjectDir) ||
                       process.env.CLAUDE_AGENT_TYPE !== undefined;
 
     if (isSubagent) {
@@ -115,14 +116,8 @@ const settingsPath = getSettingsPath();
 
     // Set initial tab title - always start fresh
     // New sessions are a clean slate, no context from previous sessions
-    const isKitty = process.env.TERM === 'xterm-kitty' || process.env.KITTY_LISTEN_ON;
-    if (isKitty) {
-      try {
-        execSync(`kitty @ set-tab-title "Ready to work..."`, { stdio: 'ignore', timeout: 2000 });
-      } catch {
-        // Silent failure - tab title is non-critical
-      }
-    }
+    // Cross-platform: works on Windows, Mac, and Linux
+    platform.setTabTitle('Ready to work...');
 
     process.exit(0);
   } catch (error) {

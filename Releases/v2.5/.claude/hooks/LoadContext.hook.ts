@@ -43,6 +43,7 @@ import { join } from 'path';
 import { execSync } from 'child_process';
 import { getPaiDir } from './lib/paths';
 import { recordSessionStart } from './lib/notifications';
+import { platform } from './lib/platform';
 
 /**
  * Reset tab title to clean state at session start.
@@ -54,17 +55,14 @@ function resetTabTitle(paiDir: string): void {
   const stateFile = join(paiDir, 'MEMORY', 'STATE', 'tab-title.json');
 
   try {
-    // Reset Kitty tab title immediately
-    const isKitty = process.env.TERM === 'xterm-kitty' || process.env.KITTY_LISTEN_ON;
-    if (isKitty) {
-      execSync(`kitty @ set-tab-title "${cleanTitle}"`, { stdio: 'ignore', timeout: 2000 });
-      // Reset tab color to default (dark blue for active, no special color for inactive)
-      execSync(
-        `kitty @ set-tab-color --self active_bg=#002B80 active_fg=#FFFFFF inactive_bg=none inactive_fg=#A0A0A0`,
-        { stdio: 'ignore', timeout: 2000 }
-      );
-      console.error('🔄 Tab title reset to clean state');
-    }
+    platform.setTabTitle(cleanTitle);
+    platform.setTabColor({
+      active_bg: '#002B80',
+      active_fg: '#FFFFFF',
+      inactive_bg: 'none',
+      inactive_fg: '#A0A0A0'
+    });
+    console.error('🔄 Tab title reset to clean state');
 
     // Reset state file to prevent any stale data
     const cleanState = {
@@ -82,17 +80,7 @@ function resetTabTitle(paiDir: string): void {
 }
 
 async function getCurrentDate(): Promise<string> {
-  try {
-    const proc = Bun.spawn(['date', '+%Y-%m-%d %H:%M:%S %Z'], {
-      stdout: 'pipe',
-      env: { ...process.env, TZ: process.env.TIME_ZONE || 'America/Los_Angeles' }
-    });
-    const output = await new Response(proc.stdout).text();
-    return output.trim();
-  } catch (error) {
-    console.error('Failed to get current date:', error);
-    return new Date().toISOString();
-  }
+  return platform.getCurrentDateTime();
 }
 
 interface Settings {
@@ -306,7 +294,7 @@ async function main() {
   try {
     // Check if this is a subagent session - if so, exit silently
     const claudeProjectDir = process.env.CLAUDE_PROJECT_DIR || '';
-    const isSubagent = claudeProjectDir.includes('/.claude/Agents/') ||
+    const isSubagent = platform.isAgentDirectory(claudeProjectDir) ||
                       process.env.CLAUDE_AGENT_TYPE !== undefined;
 
     if (isSubagent) {

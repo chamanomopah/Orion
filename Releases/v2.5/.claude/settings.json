@@ -2,7 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "paiVersion": "2.5",
   "env": {
-    "PAI_DIR": "$HOME/.claude",
+    "PAI_DIR": "${USERPROFILE}/.claude",
+    "HOME": "${USERPROFILE}",
     "PROJECTS_DIR": "",
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "80000",
     "BASH_DEFAULT_TIMEOUT_MS": "600000"
@@ -106,7 +107,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/SecurityValidator.hook.ts"
+            "command": "bun .claude/hooks/SecurityValidator.hook.ts"
           }
         ]
       },
@@ -115,7 +116,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/SecurityValidator.hook.ts"
+            "command": "bun .claude/hooks/SecurityValidator.hook.ts"
           }
         ]
       },
@@ -124,7 +125,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/SecurityValidator.hook.ts"
+            "command": "bun .claude/hooks/SecurityValidator.hook.ts"
           }
         ]
       },
@@ -133,7 +134,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/SecurityValidator.hook.ts"
+            "command": "bun .claude/hooks/SecurityValidator.hook.ts"
           }
         ]
       },
@@ -142,7 +143,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/SetQuestionTab.hook.ts"
+            "command": "bun .claude/hooks/SetQuestionTab.hook.ts"
           }
         ]
       }
@@ -153,7 +154,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/QuestionAnswered.hook.ts"
+            "command": "bun .claude/hooks/QuestionAnswered.hook.ts"
           }
         ]
       }
@@ -163,11 +164,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/WorkCompletionLearning.hook.ts"
+            "command": "bun .claude/hooks/WorkCompletionLearning.hook.ts"
           },
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/SessionSummary.hook.ts"
+            "command": "bun .claude/hooks/SessionSummary.hook.ts"
           }
         ]
       }
@@ -177,23 +178,23 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/FormatReminder.hook.ts"
+            "command": "bun .claude/hooks/FormatReminder.hook.ts"
           },
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/AutoWorkCreation.hook.ts"
+            "command": "bun .claude/hooks/AutoWorkCreation.hook.ts"
           },
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/ExplicitRatingCapture.hook.ts"
+            "command": "bun .claude/hooks/ExplicitRatingCapture.hook.ts"
           },
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/ImplicitSentimentCapture.hook.ts"
+            "command": "bun .claude/hooks/ImplicitSentimentCapture.hook.ts"
           },
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/UpdateTabTitle.hook.ts"
+            "command": "bun .claude/hooks/UpdateTabTitle.hook.ts"
           }
         ]
       }
@@ -203,15 +204,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/StartupGreeting.hook.ts"
+            "command": "bun .claude/hooks/StartupGreeting.hook.ts"
           },
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/LoadContext.hook.ts"
+            "command": "bun .claude/hooks/LoadContext.hook.ts"
           },
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/CheckVersion.hook.ts"
+            "command": "bun .claude/hooks/CheckVersion.hook.ts"
           }
         ]
       }
@@ -221,7 +222,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/StopOrchestrator.hook.ts"
+            "command": "bun .claude/hooks/StopOrchestrator.hook.ts"
           }
         ]
       }
@@ -231,7 +232,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PAI_DIR}/hooks/AgentOutputCapture.hook.ts"
+            "command": "bun .claude/hooks/AgentOutputCapture.hook.ts"
           }
         ]
       }
@@ -239,7 +240,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "${PAI_DIR}/statusline-command.sh"
+    "command": ".claude/statusline-command.sh"
   },
   "alwaysThinkingEnabled": true,
   "_docs": {

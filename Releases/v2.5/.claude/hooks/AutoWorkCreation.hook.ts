@@ -25,7 +25,7 @@
 import { mkdirSync, existsSync, readFileSync, writeFileSync, symlinkSync, unlinkSync, lstatSync } from 'fs';
 import { join } from 'path';
 import { getPaiDir } from './lib/paths';
-import { getPSTComponents, getISOTimestamp } from './lib/time';
+import { platform } from './lib/platform';
 import { inference } from '../skills/PAI/Tools/Inference';
 
 interface HookInput {
@@ -109,7 +109,7 @@ function slugify(text: string, maxLen: number = 40): string {
 }
 
 function generateSessionDirName(title: string): string {
-  const { year, month, day, hours, minutes, seconds } = getPSTComponents();
+  const { year, month, day, hours, minutes, seconds } = platform.getPSTComponents();
   const timestamp = `${year}${month}${day}-${hours}${minutes}${seconds}`;
   return `${timestamp}_${slugify(title, 50)}`;
 }
@@ -119,7 +119,7 @@ function generateSessionDirName(title: string): string {
  */
 function createSessionDirectory(sessionDirName: string, sessionId: string, title: string): string {
   const sessionPath = join(WORK_DIR, sessionDirName);
-  const timestamp = getISOTimestamp();
+  const timestamp = platform.getISOTimestamp();
 
   // Create session structure
   mkdirSync(join(sessionPath, 'tasks'), { recursive: true });
@@ -152,7 +152,7 @@ function createTaskDirectory(
   const taskSlug = slugify(title);
   const taskDirName = `${taskId}_${taskSlug}`;
   const taskPath = join(sessionPath, 'tasks', taskDirName);
-  const timestamp = getISOTimestamp();
+  const timestamp = platform.getISOTimestamp();
 
   mkdirSync(taskPath, { recursive: true });
 
@@ -219,22 +219,9 @@ _Important observations during execution..._
   };
   writeFileSync(join(taskPath, 'ISC.json'), JSON.stringify(isc, null, 2), 'utf-8');
 
-  // Update 'current' symlink (skip on Windows if symlink creation fails)
+  // Update 'current' symlink (uses platform-specific method)
   const currentLink = join(sessionPath, 'tasks', 'current');
-  try {
-    if (existsSync(currentLink) || lstatSync(currentLink)) {
-      unlinkSync(currentLink);
-    }
-    symlinkSync(taskDirName, currentLink);
-  } catch (err) {
-    // On Windows, symlinks may fail without admin/dev mode
-    // Fall back to a simple text file reference
-    try {
-      writeFileSync(currentLink, taskDirName, 'utf-8');
-    } catch {
-      // Non-critical, continue without the reference
-    }
-  }
+  platform.createLink(taskDirName, currentLink);
 
   console.error(`[AutoWork] Created task: ${taskPath}`);
   return taskDirName;
@@ -327,7 +314,7 @@ async function main() {
         session_dir: sessionDirName,
         current_task: taskDirName,
         task_count: 1,
-        created_at: getISOTimestamp(),
+        created_at: platform.getISOTimestamp(),
       };
       writeCurrentWork(currentWork);
 

@@ -74,6 +74,7 @@
 import { execSync } from 'child_process';
 import { inference } from '../skills/PAI/Tools/Inference';
 import { isValidTabSummary, getTabFallback } from './lib/response-format';
+import { platform } from './lib/platform';
 
 
 // Tab colors - different states
@@ -268,42 +269,29 @@ type TabState = 'normal' | 'working' | 'inference';
  */
 function setTabTitle(title: string, state: TabState = 'normal'): void {
   try {
-    // Add "…" suffix for active states
     const titleWithSuffix = state !== 'normal' ? `${title}…` : title;
     const truncated = titleWithSuffix.length > 50 ? titleWithSuffix.slice(0, 47) + '…' : titleWithSuffix;
-    const escaped = truncated.replace(/'/g, "'\\''");
 
-    // Check if we're in Kitty (TERM=xterm-kitty or KITTY_LISTEN_ON set)
-    const isKitty = process.env.TERM === 'xterm-kitty' || process.env.KITTY_LISTEN_ON;
+    platform.setTabTitle(truncated);
 
-    if (isKitty) {
-      // Use Kitty remote control - works even without TTY
-      execSync(`kitty @ set-tab-title "${escaped}"`, { stdio: 'ignore', timeout: 2000 });
-
-      // Set color based on state
-      if (state === 'inference') {
-        // Purple for inference/AI thinking - active tab stays dark blue, inactive shows purple
-        execSync(
-          `kitten @ set-tab-color --self active_bg=${ACTIVE_TAB_BG} active_fg=${ACTIVE_TEXT} inactive_bg=${TAB_INFERENCE_BG} inactive_fg=${INACTIVE_TEXT}`,
-          { stdio: 'ignore', timeout: 2000 }
-        );
-        console.error('[UpdateTabTitle] Set inference color (purple on inactive only)');
-      } else if (state === 'working') {
-        // Orange for actively working - active tab stays dark blue, inactive shows orange
-        execSync(
-          `kitten @ set-tab-color --self active_bg=${ACTIVE_TAB_BG} active_fg=${ACTIVE_TEXT} inactive_bg=${TAB_WORKING_BG} inactive_fg=${INACTIVE_TEXT}`,
-          { stdio: 'ignore', timeout: 2000 }
-        );
-        console.error('[UpdateTabTitle] Set working color (orange on inactive only)');
-      }
-
-      console.error('[UpdateTabTitle] Set via Kitty remote control');
-    } else {
-      // Fallback to escape codes for other terminals
-      execSync(`printf '\\033]0;${escaped}\\007' >&2`, { stdio: ['pipe', 'pipe', 'inherit'] });
-      execSync(`printf '\\033]2;${escaped}\\007' >&2`, { stdio: ['pipe', 'pipe', 'inherit'] });
-      execSync(`printf '\\033]30;${escaped}\\007' >&2`, { stdio: ['pipe', 'pipe', 'inherit'] });
+    // Set color based on state (no-op on Windows)
+    if (state === 'inference') {
+      platform.setTabColor({
+        active_bg: ACTIVE_TAB_BG,
+        active_fg: ACTIVE_TEXT,
+        inactive_bg: TAB_INFERENCE_BG,
+        inactive_fg: INACTIVE_TEXT
+      });
+    } else if (state === 'working') {
+      platform.setTabColor({
+        active_bg: ACTIVE_TAB_BG,
+        active_fg: ACTIVE_TEXT,
+        inactive_bg: TAB_WORKING_BG,
+        inactive_fg: INACTIVE_TEXT
+      });
     }
+
+    console.error('[UpdateTabTitle] Tab updated');
   } catch (err) {
     console.error(`[UpdateTabTitle] Failed to set title: ${err}`);
   }

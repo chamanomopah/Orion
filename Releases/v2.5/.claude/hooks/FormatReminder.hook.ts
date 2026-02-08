@@ -19,6 +19,7 @@
 
 import { inference } from '../skills/PAI/Tools/Inference';
 import { getDAName } from './lib/identity';
+import { platform } from './lib/platform';
 
 // Maps inference capability names → output format for the reminder
 const CAPABILITY_MAP: Record<string, { name: string; agents: string }> = {
@@ -222,7 +223,7 @@ async function main() {
   try {
     // Skip for subagents — they run their own patterns
     const claudeProjectDir = process.env.CLAUDE_PROJECT_DIR || '';
-    if (claudeProjectDir.includes('/.claude/Agents/') || process.env.CLAUDE_AGENT_TYPE) {
+    if (platform.isAgentDirectory(claudeProjectDir) || process.env.CLAUDE_AGENT_TYPE) {
       process.exit(0);
     }
 

@@ -14,7 +14,7 @@ import { join } from 'path';
 
 /**
  * Expand shell variables in a path string
- * Supports: $HOME, ${HOME}, ~ (works with both / and \ separators)
+ * Supports: $HOME, ${HOME}, ${USERPROFILE}, ~ (works with both / and \ separators)
  */
 export function expandPath(path: string): string {
   const home = homedir();
@@ -22,6 +22,7 @@ export function expandPath(path: string): string {
   return path
     .replace(/^\$HOME(?=[\/\\]|$)/, home)
     .replace(/^\$\{HOME\}(?=[\/\\]|$)/, home)
+    .replace(/^\$\{USERPROFILE\}(?=[\/\\]|$)/, home)
     .replace(/^~(?=[\/\\]|$)/, home);
 }
 

@@ -2,7 +2,7 @@
  * TabState.ts - Terminal Tab State Manager
  *
  * PURPOSE:
- * Updates Kitty terminal tab title and color on response completion.
+ * Updates terminal tab title and color on response completion.
  * Uses Sonnet inference to generate 3-5 word completion summary with
  * SUBJECT FIRST for tab distinguishability (e.g., "Auth bug fixed."
  * not "Fixed the auth bug.").
@@ -10,7 +10,8 @@
  * Also persists the last tab title to state for recovery after compaction
  * or session restart.
  *
- * Pure handler: receives pre-parsed transcript data, updates Kitty tab.
+ * Pure handler: receives pre-parsed transcript data, updates terminal tab.
+ * Cross-platform: Uses platform abstraction for Windows/Mac/Linux compatibility.
  */
 
 import { existsSync, writeFileSync, mkdirSync } from 'fs';
@@ -20,6 +21,7 @@ import { inference } from '../../skills/PAI/Tools/Inference';
 import { paiPath } from '../lib/paths';
 import { getISOTimestamp } from '../lib/time';
 import { getDAName } from '../lib/identity';
+import { platform } from '../lib/platform';
 import type { ParsedTranscript, ResponseState } from '../../skills/PAI/Tools/TranscriptParser';
 
 // Tab color states for visual feedback (inactive tab only - active tab stays dark blue)
@@ -204,11 +206,25 @@ export async function handleTabState(parsed: ParsedTranscript): Promise<void> {
     persistTabTitle(tabTitle, shortTitle, state);
 
     // Set tab colors: active tab always dark blue, inactive shows state color
-    await Bun.$`kitten @ set-tab-color --self active_bg=${ACTIVE_TAB_COLOR} active_fg=${ACTIVE_TEXT_COLOR} inactive_bg=${stateColor} inactive_fg=${INACTIVE_TEXT_COLOR}`;
+    // On Windows: colors are not supported, gracefully skipped
+    platform.setTabColor({
+      active_bg: ACTIVE_TAB_COLOR,
+      active_fg: ACTIVE_TEXT_COLOR,
+      inactive_bg: stateColor,
+      inactive_fg: INACTIVE_TEXT_COLOR
+    });
 
-    // Set tab title
-    await Bun.$`kitty @ set-tab-title ${tabTitle}`;
+    // Set tab title - works on all platforms
+    platform.setTabTitle(tabTitle);
+
+    if (platform.isWindows) {
+      console.error('[TabState] Tab title set (colors not supported on Windows)');
+    }
   } catch (error) {
-    console.error('[TabState] Failed to update Kitty tab:', error);
+    if (platform.isWindows) {
+      console.error('[TabState] Failed to update tab title on Windows:', error);
+    } else {
+      console.error('[TabState] Failed to update Kitty tab:', error);
+    }
   }
 }
