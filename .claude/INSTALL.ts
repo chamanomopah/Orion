@@ -271,14 +271,14 @@ function installBun(): void {
 
   try {
     // Check if bun is installed
-    const bunVersion = execSync('bun --version 2>/dev/null', { encoding: 'utf-8' }).trim();
+    const bunVersion = execSync('bun --version', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
     printSuccess(`Bun ${bunVersion} found`);
 
     // Upgrade to latest
     printInfo('Upgrading Bun to latest version...');
     try {
       execSync('bun upgrade', { stdio: 'inherit' });
-      const newVersion = execSync('bun --version', { encoding: 'utf-8' }).trim();
+      const newVersion = execSync('bun --version', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
       printSuccess(`Bun upgraded to ${newVersion}`);
     } catch {
       printWarning('Could not upgrade Bun (may already be latest)');
@@ -306,7 +306,7 @@ function installBun(): void {
       const pathSeparator = IS_WINDOWS ? ';' : ':';
       process.env.PATH = `${bunPath}${pathSeparator}${process.env.PATH}`;
 
-      const newVersion = execSync('bun --version', { encoding: 'utf-8' }).trim();
+      const newVersion = execSync('bun --version', { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
       printSuccess(`Bun ${newVersion} installed`);
       printInfo('You may need to restart your terminal for bun to be in PATH');
     } catch (err: any) {
